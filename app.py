@@ -14,14 +14,12 @@ st.markdown("""
     h1, h2, h3, h4, p, .stTextInput > label, .stRadio > label {
         color: #00ff00 !important;
     }
-    /* Estilo para los inputs */
     .stTextInput > div > div > input {
         color: #00ff00;
         background-color: #262730;
         border-color: #00ff00;
     }
-    /* Estilo para botones primarios (SÍ / Verificar) */
-    .stButton > button {
+    .stButton > button, .stFormSubmitButton > button {
         background-color: #00ff00;
         color: #000000;
         font-weight: bold;
@@ -29,12 +27,11 @@ st.markdown("""
         border: 2px solid #00ff00;
         width: 100%;
     }
-    .stButton > button:hover {
+    .stButton > button:hover, .stFormSubmitButton > button:hover {
         background-color: #000000;
         color: #00ff00;
         border-color: #00ff00;
     }
-    /* Estilo específico para el botón NO (rojo) */
     div[data-testid="column"]:nth-of-type(2) .stButton > button {
         background-color: #ff0000;
         border-color: #ff0000;
@@ -48,11 +45,12 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- 2. Control de Estado (Session State) ---
-# Inicializamos las variables para saber en qué etapa estamos
 if 'etapa' not in st.session_state:
-    st.session_state.etapa = 0 # 0: Pregunta SV, 1: Cuestionario, 2: Carta
+    st.session_state.etapa = 0 
 if 'intentos_beso' not in st.session_state:
     st.session_state.intentos_beso = 0
+if 'pregunta_actual' not in st.session_state:
+    st.session_state.pregunta_actual = 0
 
 # --- 3. Lógica de la Aplicación ---
 
@@ -63,99 +61,69 @@ if st.session_state.etapa == 0:
     st.divider()
     
     st.write("<h1>¿Quieres ser mi San Valentín?</h1>", unsafe_allow_html=True)
-    st.write("") # Espacio
+    st.write("")
 
     col1, col2 = st.columns(2)
-    
     with col1:
-        if st.button("SÍ, ACEPTO ❤️", key="btn_si"):
+        if st.button("SÍ, ACEPTO ❤️"):
             st.session_state.etapa = 1
             st.rerun()
-            
     with col2:
-        if st.button("NO 🚫", key="btn_no"):
-            st.error("❌ Error 404: Respuesta 'NO' no encontrada en la base de datos del corazón. Por favor, intenta de nuevo con la opción correcta.")
+        if st.button("NO 🚫"):
+            st.error("❌ Error 404: Respuesta 'NO' no encontrada en la base de datos del corazón.")
 
-# ================= ETAPA 1: El Cuestionario de Seguridad =================
+# ================= ETAPA 1: El Cuestionario Paso a Paso =================
 elif st.session_state.etapa == 1:
     st.title("🔐 AUTENTICACIÓN MULTIFACTOR")
-    st.write("¡Excelente elección! Para acceder al archivo encriptado, demuestra qué tanto conoces nuestro sistema.")
+    st.write("Demuestra qué tanto conoces nuestro sistema para acceder.")
     st.divider()
 
-    # --- Las Preguntas ---
-    q_aniversario = st.text_input("1. ¿Cuándo es nuestro aniversario? (DD/MM/AA)", placeholder="Ej: 25/12/23")
-    q_color = st.text_input("2. ¿Cuál es mi color favorito?")
-    q_personaje = st.text_input("3. ¿Cuál es mi personaje favorito?")
-    
-    # Lógica especial para la pregunta del beso
-    label_beso = "4. ¿Cuándo fue nuestro primer beso? (DD/MM/AA)"
-    if st.session_state.intentos_beso >= 3:
-        label_beso += " (Pista: La respuesta es 10/12/23 😉)"
-    
-    q_beso = st.text_input(label_beso, placeholder="Ej: 10/12/23")
-    
-    q_serie = st.text_input("5. ¿Cuál es nuestra serie para comer?")
-    q_perry = st.text_input("6. Oye... ¿y Perry?")
+    # Lista de preguntas con sus respuestas y el "ejemplo" que verá de fondo
+    preguntas = [
+        {"q": "¿Cuándo es nuestro aniversario? (DD/MM/AA)", "a": "25/12/23", "ej": "25/12/23"},
+        {"q": "¿Cuál es mi color favorito?", "a": "rojo", "ej": "rojo"},
+        {"q": "¿Cuál es mi personaje favorito?", "a": "iron man", "ej": "iron man"},
+        {"q": "¿Cuándo fue nuestro primer beso? (DD/MM/AA)", "a": "10/12/23", "ej": "10/12/23"},
+        {"q": "¿Cuál es nuestra serie para comer?", "a": "phineas y ferb", "ej": "phineas y ferb"},
+        {"q": "Oye...", "a": "y perry?", "ej": "y perry?"}
+    ]
 
-    st.divider()
-    
-    if st.button("Verificar Respuestas y Desencriptar"):
-        # Respuestas correctas
-        a_aniversario = "25/12/23"
-        a_color = "rojo"
-        a_personaje = "iron man"
-        a_beso = "10/12/23"
-        a_serie = "phineas y ferb"
-        a_perry = [
-            "es un ornitorrinco", 
-            "¡ahí estás perry!", 
-            "grrr", 
-            "agente p", 
-            "haciendo nada",
-            "no se"
-        ] # Varias opciones válidas para Perry
+    idx = st.session_state.pregunta_actual
 
-        # Validación
-        errores = []
-        if q_aniversario.strip() != a_aniversario:
-            errores.append("Fecha de aniversario incorrecta.")
-        if q_color.strip().lower() != a_color:
-            errores.append("Color favorito incorrecto.")
-        if q_personaje.strip().lower() != a_personaje:
-            errores.append("Personaje favorito incorrecto.")
+    # Mostrar la pregunta actual si aún no llegamos al final
+    if idx < len(preguntas):
+        p = preguntas[idx]
         
-        # Validación especial del beso
-        if q_beso.strip() != a_beso:
-            errores.append("Fecha del primer beso incorrecta.")
-            st.session_state.intentos_beso += 1
-        
-        if q_serie.strip().lower() != a_serie:
-            errores.append("Serie incorrecta.")
-        
-        # Validación flexible para Perry (si contiene alguna de las frases clave)
-        perry_correcto = False
-        resp_perry_usuario = q_perry.strip().lower()
-        for opcion in a_perry:
-            if opcion in resp_perry_usuario and resp_perry_usuario != "":
-                 perry_correcto = True
-                 break
-        if not perry_correcto and resp_perry_usuario != "no se": # Aceptamos "no se" como válida también si quieres ser amable
-             # Si quieres ser estricto y que tenga que decir la frase, quita el 'and resp_perry_usuario != "no se"'
-             # Si quieres que cualquier cosa que no sea vacía cuente, cambia la lógica.
-             # Por ahora, dejemos que si no atina a las frases clave, sea error.
-             if resp_perry_usuario == "":
-                 errores.append("¿Y Perry? ¡No dejaste respuesta!")
-             else:
-                 # Si quieres que "no se" sea válida, descomenta esto:
-                 # if resp_perry_usuario == "no se": pass 
-                 # else: errores.append("Respuesta sobre Perry incorrecta.")
-                 
-                 # Si quieres ser estricto:
-                 errores.append("Respuesta sobre Perry incorrecta. ¿Dónde está?")
+        label = p["q"]
+        # Mantengo tu idea original: si falla 3 veces en el beso, le da una pequeña ayudadita extra en el texto
+        if idx == 3 and st.session_state.intentos_beso >= 3:
+            label += " (Pista: Intenta con el 10/12/23 😉)"
 
-        # Resultado de la validación
-        if not errores:
-            # --- Animación de Desencriptación ---
+        st.write(f"### Desafío {idx + 1} de {len(preguntas)}")
+        
+        # El formulario permite enviar la respuesta presionando Enter
+        with st.form(key=f"form_{idx}"):
+            respuesta = st.text_input(label, placeholder=f"Ej: {p['ej']}")
+            submit = st.form_submit_button("Verificar y Siguiente")
+            
+            if submit:
+                # Quitamos espacios extras, convertimos a minúsculas y eliminamos signos de interrogación por si acaso
+                resp_usuario = respuesta.strip().lower().replace("¿", "").replace("?", "")
+                resp_correcta = p["a"].lower().replace("¿", "").replace("?", "")
+
+                if resp_usuario == resp_correcta:
+                    st.session_state.pregunta_actual += 1 # Avanza a la siguiente pregunta
+                    st.rerun()
+                else:
+                    if idx == 3:
+                        st.session_state.intentos_beso += 1
+                    st.error("❌ Respuesta incorrecta. Intenta de nuevo.")
+    else:
+        # Ya respondió todo bien
+        st.success("✅ Todos los desafíos completados con éxito.")
+        st.write("El servidor ha validado tu identidad. Pulsa el botón para desencriptar tu sorpresa.")
+        
+        if st.button("Iniciar Desencriptación Final"):
             with st.spinner('Respuestas verificadas. Iniciando secuencia de desencriptación RSA-4096...'):
                 time.sleep(1)
                 st.code("Cargando llave privada... [OK]", language="bash")
@@ -167,13 +135,6 @@ elif st.session_state.etapa == 1:
             
             st.session_state.etapa = 2
             st.rerun()
-        else:
-            st.error("⚠️ ACCESO DENEGADO. Se encontraron errores:")
-            for error in errores:
-                st.write(f"- {error}")
-            if st.session_state.intentos_beso > 0 and st.session_state.intentos_beso < 3:
-                 st.warning(f"Llevas {st.session_state.intentos_beso} intento(s) fallido(s) en la pregunta del beso.")
-
 
 # ================= ETAPA 2: La Carta Desencriptada =================
 elif st.session_state.etapa == 2:
@@ -187,7 +148,7 @@ elif st.session_state.etapa == 2:
         Si estás leyendo esto, es porque lograste superar todas las barreras de seguridad... y las de mi corazón. ¡Feliz San Valentín!
         </p>
         <p>
-        Eres la persona más increíble que conozco. Admiro muchísimo tu dedicación a la educación, cómo siempre buscas aprender más y la pasión que le pones a todo. Me encanta compartir la vida contigo, desde nuestros maratones de Phineas y Ferb mientras comemos, hasta construir juntos un futuro que es aún mejor que las mejores hamburguesas de Don Yorch.
+        Eres la persona más increíble que conozco. Admiro muchísimo tu dedicación, cómo siempre buscas aprender más y la pasión que le pones a todo. Me encanta compartir la vida contigo, desde nuestros maratones de Phineas y Ferb mientras comemos, hasta construir juntos un futuro que es aún mejor que las mejores hamburguesas de Don Yorch.
         </p>
         <p>
         Gracias por ser mi compañera de aventuras, mi apoyo incondicional y mi 'player 2' en este juego llamado vida. Cada día a tu lado es un regalo, desde ese primer beso el 10/12/23 hasta hoy. Te amo muchísimo y estoy emocionado por todo lo que viene para nosotros.
