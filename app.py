@@ -146,7 +146,7 @@ elif st.session_state.etapa == 2:
         Si estás leyendo esto, es porque lograste superar todas las barreras de seguridad... y las de mi corazón. ¡Feliz San Valentín!
         </p>
         <p>
-        Eres la persona más increíble que conozco. Admiro muchísimo tu dedicación, cómo siempre buscas aprender más y la pasión que le pones a todo. Me encanta compartir la vida contigo, desde nuestros maratones de Phineas y Ferb mientras comemos, hasta construir juntos un futuro que es aún mejor que las mejores hamburguesas de Don Yorch.
+        Eres la persona más increíble que conozco. Admiro muchísimo tu dedicación, cómo siempre buscas aprender más y la pasión que le pones a todo. Me encanta compartir la vida contigo, desde nuestros maratones de Phineas y Ferb mientras comemos jijijiji, hasta construir juntos un futuro.
         </p>
         <p>
         Gracias por ser mi compañera de aventuras, mi apoyo incondicional y mi 'player 2' en este juego llamado vida. Cada día a tu lado es un regalo, desde ese primer beso el 10/12/23 hasta hoy. Te amo muchísimo y estoy emocionado por todo lo que viene para nosotros.
