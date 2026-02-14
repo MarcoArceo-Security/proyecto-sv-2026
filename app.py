@@ -19,27 +19,30 @@ st.markdown("""
         background-color: #262730;
         border-color: #00ff00;
     }
+    /* Arreglo de los botones: Fondo verde, TEXTO NEGRO forzado */
     .stButton > button, .stFormSubmitButton > button {
-        background-color: #00ff00;
-        color: #000000;
-        font-weight: bold;
-        border-radius: 5px;
-        border: 2px solid #00ff00;
+        background-color: #00ff00 !important;
+        border: 2px solid #00ff00 !important;
         width: 100%;
+        border-radius: 5px;
+    }
+    .stButton > button *, .stFormSubmitButton > button * {
+        color: #000000 !important; 
+        font-weight: bold !important;
     }
     .stButton > button:hover, .stFormSubmitButton > button:hover {
-        background-color: #000000;
-        color: #00ff00;
-        border-color: #00ff00;
+        background-color: #000000 !important;
     }
+    .stButton > button:hover *, .stFormSubmitButton > button:hover * {
+        color: #00ff00 !important;
+    }
+    /* Estilo específico para el botón NO (rojo) */
     div[data-testid="column"]:nth-of-type(2) .stButton > button {
-        background-color: #ff0000;
-        border-color: #ff0000;
-        color: #ffffff;
+        background-color: #ff0000 !important;
+        border-color: #ff0000 !important;
     }
-    div[data-testid="column"]:nth-of-type(2) .stButton > button:hover {
-        background-color: #000000;
-        color: #ff0000;
+    div[data-testid="column"]:nth-of-type(2) .stButton > button * {
+        color: #ffffff !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -78,48 +81,43 @@ elif st.session_state.etapa == 1:
     st.write("Demuestra qué tanto conoces nuestro sistema para acceder.")
     st.divider()
 
-    # Lista de preguntas con sus respuestas y el "ejemplo" que verá de fondo
+    # --- Ejemplos falsos para no dar la respuesta ---
     preguntas = [
-        {"q": "¿Cuándo es nuestro aniversario? (DD/MM/AA)", "a": "25/12/23", "ej": "25/12/23"},
-        {"q": "¿Cuál es mi color favorito?", "a": "rojo", "ej": "rojo"},
-        {"q": "¿Cuál es mi personaje favorito?", "a": "iron man", "ej": "iron man"},
-        {"q": "¿Cuándo fue nuestro primer beso? (DD/MM/AA)", "a": "10/12/23", "ej": "10/12/23"},
-        {"q": "¿Cuál es nuestra serie para comer?", "a": "phineas y ferb", "ej": "phineas y ferb"},
-        {"q": "Oye...", "a": "y perry?", "ej": "y perry?"}
+        {"q": "¿Cuándo es nuestro aniversario? (DD/MM/AA)", "a": "25/12/23", "ej": "14/02/22"},
+        {"q": "¿Cuál es mi color favorito?", "a": "rojo", "ej": "azul"},
+        {"q": "¿Cuál es mi personaje favorito?", "a": "iron man", "ej": "batman"},
+        {"q": "¿Cuándo fue nuestro primer beso? (DD/MM/AA)", "a": "10/12/23", "ej": "01/01/23"},
+        {"q": "¿Cuál es nuestra serie para comer?", "a": "phineas y ferb", "ej": "los simpson"},
+        {"q": "Oye...", "a": "y perry?", "ej": "qué pasó?"}
     ]
 
     idx = st.session_state.pregunta_actual
 
-    # Mostrar la pregunta actual si aún no llegamos al final
     if idx < len(preguntas):
         p = preguntas[idx]
         
         label = p["q"]
-        # Mantengo tu idea original: si falla 3 veces en el beso, le da una pequeña ayudadita extra en el texto
         if idx == 3 and st.session_state.intentos_beso >= 3:
             label += " (Pista: Intenta con el 10/12/23 😉)"
 
         st.write(f"### Desafío {idx + 1} de {len(preguntas)}")
         
-        # El formulario permite enviar la respuesta presionando Enter
         with st.form(key=f"form_{idx}"):
             respuesta = st.text_input(label, placeholder=f"Ej: {p['ej']}")
             submit = st.form_submit_button("Verificar y Siguiente")
             
             if submit:
-                # Quitamos espacios extras, convertimos a minúsculas y eliminamos signos de interrogación por si acaso
                 resp_usuario = respuesta.strip().lower().replace("¿", "").replace("?", "")
                 resp_correcta = p["a"].lower().replace("¿", "").replace("?", "")
 
                 if resp_usuario == resp_correcta:
-                    st.session_state.pregunta_actual += 1 # Avanza a la siguiente pregunta
+                    st.session_state.pregunta_actual += 1 
                     st.rerun()
                 else:
                     if idx == 3:
                         st.session_state.intentos_beso += 1
                     st.error("❌ Respuesta incorrecta. Intenta de nuevo.")
     else:
-        # Ya respondió todo bien
         st.success("✅ Todos los desafíos completados con éxito.")
         st.write("El servidor ha validado tu identidad. Pulsa el botón para desencriptar tu sorpresa.")
         
